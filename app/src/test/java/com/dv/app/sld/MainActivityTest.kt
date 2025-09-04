@@ -1,13 +1,18 @@
 package com.dv.app.sld
 
+import android.graphics.drawable.StateListDrawable
+import android.graphics.drawable.VectorDrawable
 import android.widget.ToggleButton
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -27,6 +32,37 @@ class MainActivityTest {
         scenario.onActivity {
             val view = it.findViewById<ToggleButton>(R.id.button)
             assert(android.R.attr.state_checked !in view.background.state)
+        }
+    }
+
+    @Test
+    fun testStateListDrawableShadow() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+
+        scenario.onActivity {
+            val view = it.findViewById<ToggleButton>(R.id.button)
+            val sld = view.background as StateListDrawable
+            val shadow = Shadows.shadowOf(sld)
+            assert(shadow.createdFromResId == R.drawable.button_selector)
+        }
+    }
+
+    @Test
+    fun testStateListDrawableDrawableShadow() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+
+        scenario.onActivity {
+            val view = it.findViewById<ToggleButton>(R.id.button)
+            val sld = view.background as StateListDrawable
+            val state = sld.state
+            val index = sld.findStateDrawableIndex(state)
+            val drawable = sld.getStateDrawable(index) as VectorDrawable
+            val shadow = Shadows.shadowOf(drawable)
+
+            assertFalse(shadow.createdFromResId == R.drawable.twotone_photo_camera_front_24)
+            assertFalse(shadow.createdFromResId == R.drawable.twotone_photo_camera_back_24)
+
+            assertTrue(shadow.createdFromResId == -1)
         }
     }
 }
