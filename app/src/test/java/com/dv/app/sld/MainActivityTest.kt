@@ -8,13 +8,17 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertFalse
+import com.dv.app.sld.roboelectric.ShadowStateListState
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
+@Config(shadows = [
+    ShadowStateListState::class
+])
 class MainActivityTest {
     @Test
     fun testButtonClick() {
@@ -54,15 +58,22 @@ class MainActivityTest {
         scenario.onActivity {
             val view = it.findViewById<ToggleButton>(R.id.button)
             val sld = view.background as StateListDrawable
-            val state = sld.state
-            val index = sld.findStateDrawableIndex(state)
-            val drawable = sld.getStateDrawable(index) as VectorDrawable
-            val shadow = Shadows.shadowOf(drawable)
 
-            assertFalse(shadow.createdFromResId == R.drawable.twotone_photo_camera_front_24)
-            assertFalse(shadow.createdFromResId == R.drawable.twotone_photo_camera_back_24)
+            run {
+                val drawable = sld.current
+                val shadow = Shadows.shadowOf(drawable)
 
-            assertTrue(shadow.createdFromResId == -1)
+                assertTrue(shadow.createdFromResId == R.drawable.twotone_photo_camera_front_24)
+            }
+
+            onView(withId(R.id.button)).perform(click())
+
+            run {
+                val drawable = sld.current
+                val shadow = Shadows.shadowOf(drawable)
+
+                assertTrue(shadow.createdFromResId == R.drawable.twotone_photo_camera_back_24)
+            }
         }
     }
 }
